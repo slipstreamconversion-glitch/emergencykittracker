@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#183b35">
+<meta name="description" content="A private family emergency kit inventory and expiry tracker.">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<title>Family Emergency Kit</title>
+<style>
+:root{font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:#182522;background:#f4f7f5;font-synthesis:none}
+*{box-sizing:border-box}body{margin:0}button,input,select,textarea{font:inherit}button{cursor:pointer}
+header{background:#183b35;color:white;padding:20px max(16px,calc((100% - 920px)/2));}
+header h1{font-size:1.35rem;margin:0 0 4px}header p{margin:0;color:#d1e1dc;font-size:.9rem}
+main{max-width:920px;margin:auto;padding:16px;display:grid;gap:14px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.stat,.panel{background:white;border:1px solid #dce5e0;border-radius:14px;padding:14px}
+.stat strong{font-size:1.65rem;display:block}.stat span,.muted{color:#65736d;font-size:.82rem}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+button{border:0;border-radius:9px;padding:10px 14px;font-weight:650}
+.primary{background:#176b58;color:white}.secondary{background:#eaf1ed;color:#183b35;border:1px solid #d5e1da}
+.dangerbtn{background:#fff0ee;color:#9c3028;border:1px solid #f0d0cc}
+.panel h2{font-size:1rem;margin:0 0 12px}
+form{display:grid;gap:11px}.fields{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+label{display:grid;gap:5px;font-size:.8rem;color:#52635b}
+input,select,textarea{width:100%;min-width:0;padding:10px;border:1px solid #cbd8d0;border-radius:8px;background:white;color:#182522}
+.checks{display:flex;gap:16px;flex-wrap:wrap}.checks label{display:flex;align-items:center;gap:6px}.checks input{width:auto}
+.inventory-head{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap}
+.filters{display:flex;gap:8px;flex:1;min-width:230px}.filters input{flex:1}
+.item{border:1px solid #dce5e0;border-radius:11px;padding:12px;display:flex;justify-content:space-between;gap:10px;background:#fff}
+.item h3{font-size:.96rem;margin:0 0 4px}.item p{font-size:.78rem;color:#65736d;margin:3px 0}
+.pill{display:inline-block;border-radius:30px;padding:4px 9px;font-size:.72rem;font-weight:700;margin-top:6px}
+.good{background:#e5f5eb;color:#187344}.soon{background:#fff2d8;color:#8a5b00}.expired{background:#ffe8e5;color:#a32c24}
+.item-actions{display:flex;flex-direction:column;gap:6px}.item-actions button{font-size:.75rem;padding:7px 10px}
+#items{display:grid;gap:8px;margin-top:12px}.empty{padding:22px;text-align:center;color:#65736d;border:1px dashed #cbd8d0;border-radius:10px}
+.hidden{display:none!important}.note{font-size:.78rem;line-height:1.5;color:#65736d}
+footer{max-width:920px;margin:0 auto;padding:0 16px 24px}
+@media(max-width:560px){.fields{grid-template-columns:1fr}.stats{gap:7px}.stat{padding:10px}.stat strong{font-size:1.4rem}.item{align-items:flex-start}}
+</style>
+</head>
+<body>
+<header><h1>🧰 Family Emergency Kit</h1><p>Keep your household supplies ready when you need them.</p></header>
+<main>
+<section class="stats">
+ <div class="stat"><strong id="total">0</strong><span>Total items</span></div>
+ <div class="stat"><strong id="soon" style="color:#a36b00">0</strong><span>Expiring within 90 days</span></div>
+ <div class="stat"><strong id="expired" style="color:#b33b31">0</strong><span>Expired</span></div>
+</section>
+<section class="panel">
+ <h2>🔔 Expiry reminders</h2>
+ <p class="note">Choose when to be reminded. Notifications are checked while the app is open. A browser-only app cannot guarantee scheduled alerts when it is closed; reliable background push alerts need a push service.</p>
+ <div class="checks" id="reminderChoices">
+  <label><input type="checkbox" value="90" checked> 90 days</label>
+  <label><input type="checkbox" value="30" checked> 30 days</label>
+  <label><input type="checkbox" value="7" checked> 7 days</label>
+ </div>
+ <div class="actions" style="margin-top:12px"><button class="primary" id="enableNotifications">Enable notifications</button><span class="muted" id="notificationStatus" style="align-self:center">Permission not requested</span></div>
+</section>
+<section class="panel">
+ <div class="actions">
+  <button class="primary" id="showAdd">＋ Add an item</button>
+  <button class="secondary" id="exportBtn">Export backup</button>
+  <button class="secondary" id="importBtn">Import backup</button>
+ </div>
+ <form id="itemForm" class="hidden" style="margin-top:16px">
+  <h2 id="formTitle">Add an item</h2>
+  <input type="hidden" id="itemId">
+  <div><label>Item name *<input id="name" required maxlength="100" placeholder="e.g. First aid kit"></label></div>
+  <div class="fields">
+   <label>Category<select id="category"><option>Food</option><option>Water</option><option>First Aid</option><option>Medication</option><option>Hygiene</option><option>Lighting</option><option>Batteries</option><option>Clothing</option><option>Tools & Equipment</option><option>Documents</option><option>Other</option></select></label>
+   <label>Quantity<input id="quantity" type="number" min="1" value="1"></label>
+   <label>Expiry date *<input id="expiry" type="date" required></label>
+   <label>Purchase date<input id="purchased" type="date"></label>
+  </div>
+  <label>Storage location<input id="location" placeholder="e.g. Basement emergency bin"></label>
+  <label>Notes<textarea id="notes" rows="2" placeholder="Brand, size, replacement details…"></textarea></label>
+  <div class="actions"><button class="primary" type="submit">Save item</button><button class="secondary" type="button" id="cancelEdit">Cancel</button></div>
+ </form>
+</section>
+<section class="panel">
+ <div class="inventory-head"><h2 style="margin:0">Inventory</h2><div class="filters"><input id="search" placeholder="Search items…" aria-label="Search items"><select id="filter" aria-label="Filter inventory"><option value="all">All items</option><option value="expired">Expired</option><option value="soon">Expiring soon</option><option value="good">Not expiring soon</option></select></div></div>
+ <p class="muted" id="countLabel"></p><div id="items"></div><div id="empty" class="empty">No supplies added yet. Add your first item above.</div>
+</section>
+<section class="panel">
+ <h2>💾 Your data</h2>
+ <p class="note">Your inventory is stored locally in this browser on this device. It is not uploaded to a server or automatically shared with your other devices. Export a JSON backup regularly; import it on another device to transfer your list. Clearing browser data may erase the inventory.</p>
+ <div class="actions"><button class="dangerbtn" id="clearAll">Clear all inventory</button></div>
+ <p class="muted" id="saveStatus" aria-live="polite">Ready</p>
+</section>
+</main>
+<footer><p class="note">Expiry dates are reminders only. Always follow the manufacturer's storage instructions and check supplies before use.</p></footer>
+<input type="file" id="backupFile" accept=".json,application/json" class="hidden">
+<script src="app.js"></script>
+</body></html>
